@@ -1,33 +1,80 @@
 {
     "version": 2,
     "builds": [
-    {
-    "src": "./index.js",
-    "use": "@vercel/node"
-    }
+      {
+        "src": "index.js",
+        "use": "@vercel/node"
+      }
     ],
     "routes": [
-        {
-          "src": "/api/auth/(.*)",
-          "dest": "/bin/app/routes/user.js",
-          "methods": ["GET", "POST", "PUT", "DELETE"]
-        },
-        {
-          "src": "/api/question/(.*)",
-          "dest": "/bin/app/routes/question.js",
-          "methods": ["GET", "POST", "PUT", "DELETE"]
-        },
-        {
-          "src": "/api/article/(.*)",
-          "dest": "/bin/app/routes/article.js",
-          "methods": ["GET", "POST", "PUT", "DELETE"]
-        },
-        {
-        "src": "/(.*)",
-        "dest": "/",
-        "methods": ["GET", "POST", "PUT", "DELETE"]
-        }
-      ]
-    
-    
- }
+      {
+        "src": "/api/auth/signup",
+        "dest": "/bin/app/routes/user.js"
+      },
+      {
+        "src": "/api/auth/login",
+        "dest": "/bin/app/routes/user.js"
+      },
+      {
+        "src": "/api/auth/myProfile",
+        "dest": "/bin/app/routes/user.js"
+      },
+      {
+        "src": "/api/question/create",
+        "dest": "/bin/app/routes/question.js"
+      },
+      {
+        "src": "/api/question/update/:questionId",
+        "dest": "/bin/app/routes/question.js"
+      },
+      {
+        "src": "/api/question/delete/:questionId",
+        "dest": "/bin/app/routes/question.js"
+      },
+      {
+        "src": "/api/question/reply/:questionId",
+        "dest": "/bin/app/routes/question.js"
+      },
+      {
+        "src": "/api/question/vote/:questionId",
+        "dest": "/bin/app/routes/question.js"
+      },
+      {
+        "src": "/api/question/fetchAll",
+        "dest": "/bin/app/routes/question.js"
+      },
+      {
+        "src": "/api/question/getQuestionbyTags",
+        "dest": "/bin/app/routes/question.js"
+      },
+      {
+        "src": "/api/question/getUserQuestion",
+        "dest": "/bin/app/routes/question.js"
+      },
+      {
+        "src": "/api/question/getDetail/:questionId",
+        "dest": "/bin/app/routes/question.js"
+      },
+      {
+        "src": "/api/question/sortReplies/:questionId",
+        "dest": "/bin/app/routes/question.js"
+      },
+      {
+        "src": "/api/article/createArticle",
+        "dest": "/bin/app/routes/article.js"
+      },
+      {
+        "src": "/api/article/get/all",
+        "dest": "/bin/app/routes/article.js"
+      },
+      {
+        "src": "/api/article/get/:articleId",
+        "dest": "/bin/app/routes/article.js"
+      },
+      {
+        "src": "/api/article/reply/:articleId",
+        "dest": "/bin/app/routes/article.js"
+      }
+    ]
+  }
+  
