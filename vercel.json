@@ -8,74 +8,26 @@
     ],
     "routes": [
       {
-        "src": "/api/auth/signup",
+        "src": "/api/auth/(login|signup|myProfile)",
+        "methods": ["POST", "GET"],
         "dest": "/bin/app/routes/user.js"
       },
       {
-        "src": "/api/auth/login",
-        "methods": ["POST"],
-        "dest": "/bin/app/routes/user.js"
-      },
-      {
-        "src": "/api/auth/myProfile",
-        "dest": "/bin/app/routes/user.js"
-      },
-      {
-        "src": "/api/question/create",
+        "src": "/api/question/(create|update|delete|reply|vote|fetchAll|getQuestionbyTags|getUserQuestion|getDetail|sortReplies)/:questionId*",
+        "methods": ["POST", "PUT", "DELETE", "GET"],
         "dest": "/bin/app/routes/question.js"
       },
       {
-        "src": "/api/question/update/:questionId",
-        "dest": "/bin/app/routes/question.js"
-      },
-      {
-        "src": "/api/question/delete/:questionId",
-        "dest": "/bin/app/routes/question.js"
-      },
-      {
-        "src": "/api/question/reply/:questionId",
-        "dest": "/bin/app/routes/question.js"
-      },
-      {
-        "src": "/api/question/vote/:questionId",
-        "dest": "/bin/app/routes/question.js"
-      },
-      {
-        "src": "/api/question/fetchAll",
-        "dest": "/bin/app/routes/question.js"
-      },
-      {
-        "src": "/api/question/getQuestionbyTags",
-        "dest": "/bin/app/routes/question.js"
-      },
-      {
-        "src": "/api/question/getUserQuestion",
-        "dest": "/bin/app/routes/question.js"
-      },
-      {
-        "src": "/api/question/getDetail/:questionId",
-        "dest": "/bin/app/routes/question.js"
-      },
-      {
-        "src": "/api/question/sortReplies/:questionId",
-        "dest": "/bin/app/routes/question.js"
-      },
-      {
-        "src": "/api/article/createArticle",
+        "src": "/api/article/(createArticle|get/all|get/:articleId|reply/:articleId)",
+        "methods": ["POST", "GET"],
         "dest": "/bin/app/routes/article.js"
       },
       {
-        "src": "/api/article/get/all",
-        "dest": "/bin/app/routes/article.js"
+        "handle": "filesystem"
       },
       {
-        "src": "/api/article/get/:articleId",
-        "dest": "/bin/app/routes/article.js"
-      },
-      {
-        "src": "/api/article/reply/:articleId",
-        "dest": "/bin/app/routes/article.js"
+        "src": "/(.*)",
+        "dest": "/index.js"
       }
     ]
   }
-  
