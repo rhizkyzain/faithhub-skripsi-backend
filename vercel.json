@@ -7,10 +7,27 @@
     }
     ],
     "routes": [
-    {
-    "src": "/(.*)",
-    "dest": "/",
-    "methods": ["GET", "POST", "PUT", "DELETE"]
-    }
-    ]
-    }
+        {
+          "src": "/api/auth/(.*)",
+          "dest": "/bin/app/routes/user.js",
+          "methods": ["GET", "POST", "PUT", "DELETE"]
+        },
+        {
+          "src": "/api/question/(.*)",
+          "dest": "/bin/app/routes/question.js",
+          "methods": ["GET", "POST", "PUT", "DELETE"]
+        },
+        {
+          "src": "/api/article/(.*)",
+          "dest": "/bin/app/routes/article.js",
+          "methods": ["GET", "POST", "PUT", "DELETE"]
+        },
+        {
+        "src": "/(.*)",
+        "dest": "/",
+        "methods": ["GET", "POST", "PUT", "DELETE"]
+        }
+      ]
+    
+    
+ }
