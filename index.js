@@ -6,24 +6,22 @@ const connectDB = require('./bin/helpers/databases/connection');
 const authRoutes = require('./bin/app/routes/user');
 const questionRoutes = require('./bin/app/routes/question');
 const articleRoutes = require('./bin/app/routes/article');
-const multer = require("multer");
+
 
 const app = express();
 const PORT = process.env.PORT || 9001;
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:9000",
+    origin: "*",
     methods: ["GET", "POST"],
     credentials: true,
   }
 });
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
 
 app.use(cors({
-  origin: "http://localhost:9000",
+  origin: "*",
   credentials: true,
 }));
 app.use(upload.array());
