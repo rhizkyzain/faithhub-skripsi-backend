@@ -26,6 +26,9 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.get("/", (req, res) => {
+  res.send("Working");
+});
 
 // Socket.io connection handling
 io.on("connection", (socket) => {
