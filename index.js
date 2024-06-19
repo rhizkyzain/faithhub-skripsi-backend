@@ -24,7 +24,7 @@ app.use(cors({
   origin: "*",
   credentials: true,
 }));
-app.use(upload.array());
+
 app.use(express.json());
 
 // Socket.io connection handling
