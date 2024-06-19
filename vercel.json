@@ -13,6 +13,7 @@
       },
       {
         "src": "/api/auth/login",
+        "methods": ["POST"],
         "dest": "/bin/app/routes/user.js"
       },
       {
