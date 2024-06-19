@@ -6,7 +6,6 @@ const connectDB = require('./bin/helpers/databases/connection');
 const authRoutes = require('./bin/app/routes/user');
 const questionRoutes = require('./bin/app/routes/question');
 const articleRoutes = require('./bin/app/routes/article');
-const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 
 const app = express();
@@ -75,12 +74,6 @@ app.use('/api/article', articleRoutes);
 // Database connection
 connectDB();
 
-// Cloudinary configuration
-cloudinary.config({
-  cloud_name: process.env.CLOUD_NAME,
-  api_key: process.env.CLOUD_API_KEY,
-  api_secret: process.env.CLOUD_SECRET_KEY,
-});
 
 // Start the server
 server.listen(PORT, () => {
