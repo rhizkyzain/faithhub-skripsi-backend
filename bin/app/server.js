@@ -6,7 +6,7 @@ const connectDB = require('./bin/helpers/databases/connection');
 const authRoutes = require('./bin/app/routes/user');
 const questionRoutes = require('./bin/app/routes/question');
 const articleRoutes = require('./bin/app/routes/article');
-const multer = require("multer");
+
 
 const app = express();
 const PORT = process.env.PORT || 9001;
@@ -19,8 +19,7 @@ const io = socketIo(server, {
   }
 });
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+
 
 // Use CORS middleware
 app.use(cors());
