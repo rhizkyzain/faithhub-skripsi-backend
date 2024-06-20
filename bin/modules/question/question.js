@@ -256,6 +256,8 @@ async function getUserQuestion(req, res) {
         const questions = await Question.find({creatorId: user.userId}).sort({ createdAt: -1 });
         const response = [];
         for (const question of questions) {
+            const replyCount = await Reply.countDocuments({replyToPost: question.questionId});
+            question.replyCount = replyCount;
             const userDetails = await User.findOne({userId: question?.creatorId});
             const reqInfo = new Object({
                 name: userDetails?.name,
