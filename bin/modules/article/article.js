@@ -43,8 +43,9 @@ async function createArticle(req, res) {
 }
 
 async function getAllArticle(req, res) {
+    const user = req.user;
     try {
-        const articles = await Article.find().sort({ createdAt: -1 });
+        const articles = await Article.find({religion: user.religion}).sort({ createdAt: -1 });
         const response = [];
 
         for (const article of articles) {
@@ -136,9 +137,55 @@ async function addReply(req, res) {
     }
 }
 
+async function vote(req, res) {
+    const { articleId } = req.params;
+    const { type } = req.body;
+    const user = req.user;
+
+    try {
+        const article = await Article.findOne({articleId});
+        const owner = await User.findOne({userId: article.creatorId});
+
+        if (type === "up") {
+            if (article.downVotes.indexOf(user.userId) !== -1)
+                article.downVotes.splice(article.downVotes.indexOf(user.userId), 1);
+
+            if (article.upVotes.indexOf(user.userId) === -1)
+                article.upVotes.push(user.userId);
+            else
+                article.upVotes.splice(article.upVotes.indexOf(user.userId), 1);
+        } else {
+            if (article.upVotes.indexOf(user.userId) !== -1)
+                article.upVotes.splice(article.upVotes.indexOf(user.userId), 1);
+
+            if (article.downVotes.indexOf(user.userId) === -1)
+                article.downVotes.push(user.userId);
+            else
+                article.downVotes.splice(article.downVotes.indexOf(user.userId), 1);
+        }
+
+        await article.save();
+
+        // const replyInfo = [];
+
+        // const replies = await Reply.find({ replyToPost: question.questionId }).sort({ createdAt: -1 });
+        // for (const reply of replies)
+        //     replyInfo.push({ replyData: reply, ownerInfo: await User.findOne({userId: reply.creatorId}) });
+        res.status(201).json({
+            Message: "Vote Sucessfull", votes: type
+        });
+
+        // res.status(200).json({ question, ownerInfo: owner, replies: replyInfo });
+    } catch (err) {
+        // console.log(err);
+        res.status(500).json("Error occurred while processing! Please try again!");
+    }
+}
+
 module.exports = {
     createArticle,
     getAllArticle,
     getArticleDetail,
-    addReply
+    addReply,
+    vote
 };

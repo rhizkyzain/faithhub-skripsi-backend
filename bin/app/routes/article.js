@@ -9,6 +9,7 @@ router.route("/createArticle").post(authController.authMiddleware, articleContro
 router.route("/get/all").get(authController.authMiddleware, articleController.getAllArticle);
 router.route("/get/:articleId").get(authController.authMiddleware, articleController.getArticleDetail);
 router.route("/reply/:articleId").post(authController.authMiddleware, articleController.addReply);
+router.route("/vote/:articleId").post(authController.authMiddleware, articleController.vote);
 // router.route("/fetch/options").post(authController.protect, articleController.fetchOptions);
 // router.route("/vote").post(authController.protect, articleController.vote);
 
