@@ -20,5 +20,7 @@ router.route("/getAllTags").get(authController.authMiddleware ,doubtController.g
 router.route("/searchContent").get(authController.authMiddleware ,doubtController.searchContent); 
 router.route("/uploadAudio").post(authController.authMiddleware, upload.single('audio'), doubtController.uploadAudio);
 router.route("/getAudioContent").get(authController.authMiddleware ,doubtController.getAudio); 
+router.route("/getTotalContent").get( doubtController.getTotalContent); 
+router.route("/deleteAudio/:audioId").delete(authController.authMiddleware, doubtController.deleteAudio);
 
 module.exports = router;

@@ -8,7 +8,6 @@ const Tags = require('./tags_model'); // Adjust path accordingly
 const Article = require('../article/article_model'); // Adjust path accordingly
 const cloudinary = require('cloudinary').v2;
 const Audio = require('../question/audio_model');
-// const catchAsync = require('../utils/catchAsync');
 
 // const secretKey = process.env.SECRET_KEY;
 
@@ -173,7 +172,7 @@ async function deleteQuestion(req, res) {
         const owner = await User.findOne({userId: question.creatorId});
         // console.log(question);
         // console.log(owner);
-        if (question.creatorId?.toString() !== user?.userId?.toString()) {
+        if (user.role !== 'admin') {
             res.status(400).json("You are not allowed to Delete this post!");
             return;
         }
@@ -481,7 +480,6 @@ async function voteToReply(req, res) {
     }
     
     
-    
     async function sortReplies(req, res) {
         const { questionId } = req.params;
         const { type } = req.body;
@@ -510,6 +508,7 @@ async function voteToReply(req, res) {
         }
     }
 
+    //Audio Funtion
     const uploadAudio = async (req, res) => {
         const { audioTitle, tags} = req.body;
         const file = req.file;
@@ -574,6 +573,56 @@ async function voteToReply(req, res) {
           res.status(500).json({ message: 'Error fetching audio' });
         }
       };
+
+      const deleteAudio = async (req, res) => {
+        const { audioId } = req.params; // Get audioId from request parameters
+        const user = req.user; // Get user information from the request context
+        try {
+            // Find the audio record in the database
+            if (user.role !== 'admin') {
+                res.status(400).json("You are not allowed to Delete this Audio!");
+                return;
+            }
+            const audio = await Audio.findOne({audioId: audioId});
+    
+            if (!audio) {
+                return res.status(404).json({ message: 'Audio not found' });
+            }
+    
+            // Delete the audio file from Cloudinary
+            const publicId = 'faithHub_audio/' + audio.url.split('/').pop().split('.')[0]; // Extract the public ID from the URL
+            console.log(publicId);
+            await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
+    
+            // Remove the audio record from the database
+            await Audio.deleteOne({ audioId });
+    
+            res.status(200).json({ message: 'Audio deleted successfully' });
+        } catch (error) {
+            console.error('Error deleting audio:', error);
+            res.status(500).json({ message: 'Error deleting audio' });
+        }
+    };
+
+      async function getTotalContent(req, res) {
+        try {
+            const questions = await Question.find();
+            const articles = await Article.find();
+            const audioLists = await Audio.find();
+            const user = await User.find();
+
+            const totalQuestion = questions.length;
+            const totalArticles = articles.length;
+            const totalAudio = audioLists.length;
+            const totalUser = user.length;
+
+            
+            res.status(200).json({totalQuestion, totalArticles, totalAudio, totalUser});
+        } catch (err) {
+            // console.log(err);
+            res.status(500).json("Error occurred while processing! Please try again!",err);
+        }
+    }
     
     module.exports = {
         createQuestion,
@@ -592,5 +641,7 @@ async function voteToReply(req, res) {
         getAllTags,
         searchContent,
         uploadAudio,
-        getAudio
+        getAudio,
+        getTotalContent,
+        deleteAudio
     };
