@@ -11,16 +11,7 @@ const secretKey = process.env.SECRET_KEY;
 async function registerUser(req, res) {
     const { name ,email, password, religion } = req.body;
     try {
-        // Validate email
-        // if (!validator.isEmail(email)) {
-        //     return res.status(400).json({ message: 'Invalid email address' });
-        // }
-
-        // // Validate password
-        // if (!isStrongPassword(password)) {
-        //     return res.status(400).json({ message: 'Password must contain at least 1 special character' });
-        // }
-
+    
         // Check if user already exists
         const existingUser = await UserModel.findOne({ email });
         if (existingUser) {
@@ -44,16 +35,6 @@ async function registerUser(req, res) {
 async function registerAdmin(req, res) {
     const { name ,email, password, religion } = req.body;
     try {
-        // Validate email
-        // if (!validator.isEmail(email)) {
-        //     return res.status(400).json({ message: 'Invalid email address' });
-        // }
-
-        // // Validate password
-        // if (!isStrongPassword(password)) {
-        //     return res.status(400).json({ message: 'Password must contain at least 1 special character' });
-        // }
-
         // Check if user already exists
         const existingUser = await UserModel.findOne({ email });
         if (existingUser) {
@@ -69,7 +50,7 @@ async function registerAdmin(req, res) {
 
         res.status(201).json({ message: 'Admin registered successfully' });
     } catch (error) {
-        console.error('Error registering Admin:', error);
+        console.error('Error registering Admin', error);
         res.status(500).json({ message: 'Failed to register Admin' });
     }
 }
@@ -102,6 +83,16 @@ async function login(req, res) {
     }
 }
 
+async function getAllUsers(req, res) {
+    try {
+        // Find users where the role is not 'admin'
+        const users = await UserModel.find({ role: { $ne: 'admin' } });
+        res.status(200).json(users);
+    } catch (error) {
+        console.error('Error getting users:', error);
+        res.status(500).json({ message: 'Failed to get users' });
+    }
+}
 async function myProfile(req, res) {
     res.status(200).json({ data: req.user
     });
@@ -145,5 +136,6 @@ module.exports = {
     authMiddleware,
     protectedRoute,
     myProfile,
-    registerAdmin
+    registerAdmin,
+    getAllUsers
 };

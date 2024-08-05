@@ -97,6 +97,30 @@ async function getAllArticle(req, res) {
     }
 }
 
+async function deleteArticle(req, res) {
+    const { articleId } = req.params;
+    const user = req.user;
+    try {
+        const article = await Article.findOne({ articleId });
+        const owner = await User.findOne({userId: article.creatorId});
+        // console.log(article);
+        // console.log(owner);
+        if (user.role !== 'admin') {
+            res.status(400).json("You are not allowed to Delete this post!");
+            return;
+        }
+
+        owner.save();
+
+        await Reply.deleteMany({ replyToPost: article.articleId });
+        await Article.findOneAndDelete(article?.articleId);
+        res.status(201).json({Message: 'Article Deleted successfully'});
+    } catch (err) {
+        console.log(err);
+        res.status(500).json("Couldn't delete doubt!! Please try again!");
+    }
+}
+
 async function getArticlebyTags(req, res) {
     const {tags} = req.body
     
@@ -245,5 +269,6 @@ module.exports = {
     getArticleDetail,
     addReply,
     vote,
-    getArticlebyTags
+    getArticlebyTags,
+    deleteArticle
 };
