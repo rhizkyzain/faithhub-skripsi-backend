@@ -8,7 +8,7 @@
     ],
     "routes": [
       {
-        "src": "/api/auth/(login|signup|myProfile)",
+        "src": "/api/auth/(login|signup|signupAdmin|myProfile)",
         "methods": ["POST", "GET"],
         "dest": "/bin/app/routes/user.js"
       },
