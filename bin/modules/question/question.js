@@ -13,26 +13,6 @@ const Audio = require('../question/audio_model');
 // const secretKey = process.env.SECRET_KEY;
 
 
-
-// async function createOrAddTags(religion, newTags) {
-//     try {
-//         let tagsDocument = await Tags.findOne({ religion });
-
-//         if (!tagsDocument) {
-//             tagsDocument = await Tags.create({ religion, tags: Array.isArray(newTags) ? newTags : [newTags] });
-//         } else {
-//             // Ensure newTags is an array, then push each tag into the existing tags array
-//             const tagsToAdd = Array.isArray(newTags) ? newTags : [newTags];
-//             tagsToAdd.forEach(tag => {
-//                 tagsDocument.tags.push(tag);
-//             });
-//             await tagsDocument.save();
-//         }
-//     } catch (err) {
-//         throw new Error(`Failed to create or add tags for religion ${religion}: ${err.message}`);
-//     }
-// }
-
 async function createOrAddTags(religion, newTags) {
     try {
         // Fetch the existing tags document for the specified religion
