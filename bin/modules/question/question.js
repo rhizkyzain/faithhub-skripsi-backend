@@ -5,6 +5,7 @@ const User = require('../user/user_model');
 const Reply = require('../question/replyModel');
 const { v4: uuidv4 } = require('uuid');
 const Tags = require('./tags_model'); // Adjust path accordingly
+const Article = require('../article/article_model'); // Adjust path accordingly
 // const catchAsync = require('../utils/catchAsync');
 
 // const secretKey = process.env.SECRET_KEY;
@@ -440,6 +441,56 @@ async function voteToReply(req, res) {
             res.status(500).json(err);
         }
     }
+
+    async function searchContent(req, res) {
+        const { query } = req.query;
+        const user = req.user;
+    
+        try {
+            const questions = await Question.find({
+                religion: user.religion,
+                $or: [
+                    { questionTitle: { $regex: query, $options: 'i' } },
+                    { description: { $regex: query, $options: 'i' } }
+                ]
+            }).sort({ createdAt: -1 });
+    
+            const articles = await Article.find({
+                religion: user.religion,
+                $or: [
+                    { articleTitle: { $regex: query, $options: 'i' } },
+                    { description: { $regex: query, $options: 'i' } }
+                ]
+            }).sort({ createdAt: -1 });
+    
+            const response = {
+                questions: [],
+                articles: []
+            };
+    
+            for (const question of questions) {
+                const userDetails = await User.findOne({ userId: question.creatorId });
+                const reqInfo = {
+                    name: userDetails.name,
+                };
+                response.questions.push({ doubtDetails: question, ownerInfo: reqInfo });
+            }
+    
+            for (const article of articles) {
+                const userDetails = await User.findOne({ userId: article.creatorId });
+                const reqInfo = {
+                    name: userDetails.name,
+                };
+                response.articles.push({ articleDetails: article, ownerInfo: reqInfo });
+            }
+    
+            res.status(200).json(response);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json("Error occurred while searching for questions! Please try again.");
+        }
+    }
+    
     
     async function sortReplies(req, res) {
         const { questionId } = req.params;
@@ -483,5 +534,6 @@ async function voteToReply(req, res) {
         getUserQuestion,
         createOrAddTags,
         getTags,
-        getAllTags
+        getAllTags,
+        searchContent
     };
