@@ -446,20 +446,25 @@ async function voteToReply(req, res) {
         const { query } = req.query;
         const user = req.user;
     
+        // Ensure `query` is a string and sanitize it
+        const sanitizedQuery = typeof query === 'string' ? query : '';
+    
         try {
+            // Query for questions
             const questions = await Question.find({
                 religion: user.religion,
                 $or: [
-                    { questionTitle: { $regex: query, $options: 'i' } },
-                    { description: { $regex: query, $options: 'i' } }
+                    { questionTitle: { $regex: sanitizedQuery, $options: 'i' } },
+                    { description: { $regex: sanitizedQuery, $options: 'i' } }
                 ]
             }).sort({ createdAt: -1 });
     
+            // Query for articles
             const articles = await Article.find({
                 religion: user.religion,
                 $or: [
-                    { articleTitle: { $regex: query, $options: 'i' } },
-                    { description: { $regex: query, $options: 'i' } }
+                    { articleTitle: { $regex: sanitizedQuery, $options: 'i' } },
+                    { description: { $regex: sanitizedQuery, $options: 'i' } }
                 ]
             }).sort({ createdAt: -1 });
     
@@ -468,6 +473,7 @@ async function voteToReply(req, res) {
                 articles: []
             };
     
+            // Populate questions
             for (const question of questions) {
                 const userDetails = await User.findOne({ userId: question.creatorId });
                 const reqInfo = {
@@ -476,6 +482,7 @@ async function voteToReply(req, res) {
                 response.questions.push({ doubtDetails: question, ownerInfo: reqInfo });
             }
     
+            // Populate articles
             for (const article of articles) {
                 const userDetails = await User.findOne({ userId: article.creatorId });
                 const reqInfo = {
@@ -490,6 +497,7 @@ async function voteToReply(req, res) {
             res.status(500).json("Error occurred while searching for questions! Please try again.");
         }
     }
+    
     
     
     async function sortReplies(req, res) {
