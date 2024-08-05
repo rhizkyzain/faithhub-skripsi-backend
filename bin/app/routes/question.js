@@ -15,5 +15,6 @@ router.route("/getDetail/:questionId").get(authController.authMiddleware, doubtC
 router.route("/sortReplies/:questionId").post(authController.authMiddleware, doubtController.sortReplies);
 router.route("/getTags").get(authController.authMiddleware ,doubtController.getTags); 
 router.route("/getAllTags").get(authController.authMiddleware ,doubtController.getAllTags); 
+router.route("/searchContent").get(authController.authMiddleware ,doubtController.searchContent); 
 
 module.exports = router;
