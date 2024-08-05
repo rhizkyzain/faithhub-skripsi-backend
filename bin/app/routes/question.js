@@ -1,6 +1,8 @@
 const express = require("express");
 const authController = require("../../modules/user/user");
 const doubtController = require("../../modules/question/question");
+const upload = require("../../config/multer.js");
+
 
 const router = express.Router();
 router.route("/create").post(authController.authMiddleware, doubtController.createQuestion);
@@ -16,5 +18,7 @@ router.route("/sortReplies/:questionId").post(authController.authMiddleware, dou
 router.route("/getTags").get(authController.authMiddleware ,doubtController.getTags); 
 router.route("/getAllTags").get(authController.authMiddleware ,doubtController.getAllTags); 
 router.route("/searchContent").get(authController.authMiddleware ,doubtController.searchContent); 
+router.route("/uploadAudio").post(authController.authMiddleware, upload.single('audio'), doubtController.uploadAudio);
+router.route("/getAudioContent").get(authController.authMiddleware ,doubtController.getAudio); 
 
 module.exports = router;
