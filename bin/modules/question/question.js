@@ -514,11 +514,17 @@ async function voteToReply(req, res) {
         const { audioTitle, tags} = req.body;
         const file = req.file;
         const user = req.user;
+
+        const allowedMimeTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/mp4', 'audio/m4a'];
         try {
           
           console.log(file, audioTitle, tags);
           if (!file) {
             return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+            return res.status(422).json({ message: 'Invalid file type. Please upload an audio file.' });
         }
           const result = await cloudinary.uploader.upload(file.path, {
             resource_type: 'video', // Cloudinary treats audio files as videos
