@@ -4,48 +4,121 @@ const Question = require('../question/question_model');
 const User = require('../user/user_model');
 const Reply = require('../question/replyModel');
 const { v4: uuidv4 } = require('uuid');
-// const catchAsync = require('../utils/catchAsync');
+const Tags = require('./tags_model'); // Adjust path accordingly
+const Article = require('../article/article_model'); // Adjust path accordingly
+const cloudinary = require('cloudinary').v2;
+const Audio = require('../question/audio_model');
 
 // const secretKey = process.env.SECRET_KEY;
 
-async function createQuestion(req, res) {
-    const { questionTitle, description, tags, media} = req.body;
-    const user = req.user;
-    // console.log(user);
+
+async function createOrAddTags(religion, newTags) {
     try {
-         // Validate question duplicates
-        const questionCheck = await Question.findOne({questionTitle});
-    
+        // Fetch the existing tags document for the specified religion
+        let tagsDocument = await Tags.findOne({ religion });
+
+        // If no document exists for the religion, create a new one
+        if (!tagsDocument) {
+            tagsDocument = await Tags.create({ religion, tags: [] });
+        }
+
+        // Create a set of existing tags for quick lookup
+        const existingTags = new Set(tagsDocument.tags);
+
+        // Iterate over each new tag
+        for (const tag of newTags) {
+            // Only add the tag if it doesn't already exist
+            if (!existingTags.has(tag)) {
+                tagsDocument.tags.push(tag);
+                existingTags.add(tag); // Add to the set to avoid duplicates
+            }
+        }
+
+        // Save the updated tags document
+        await tagsDocument.save();
+    } catch (err) {
+        throw new Error(`Failed to create or add tags for religion ${religion}: ${err.message}`);
+    }
+}
+
+
+async function createQuestion(req, res) {
+    const { questionTitle, description, tags, media } = req.body;
+    const user = req.user;
+
+    try {
+        const questionCheck = await Question.findOne({ questionTitle });
+
         if (questionCheck) {
             return res.status(400).json({ message: 'Sudah ada pertanyaan yang sama !!!' });
         }
-        if(questionTitle){
+
+        if (questionTitle) {
             const newQuestion = await Question.create({
                 questionId: uuidv4(),
-                questionTitle: questionTitle,
-                description: description,
-                tags: tags,
+                questionTitle,
+                description,
+                religion: user.religion,
+                tags,
                 creatorId: user.userId,
                 createdAt: Date.now(),
-                // media: media,
             });
-            // console.log(newQuestion);
-            const owner = await User.findOne({userId: user.userId});
+
+            const owner = await User.findOne({ userId: user.userId });
             owner.questionCount += 1;
-            owner.save();
-            // const newQuestion = new UserModel({ name, email, password: hashedPassword, religion });
-            // await newQuestion.save();
-    
-            // res.status(201).json({ message: 'User registered successfully' });
+            await owner.save();
+
+            // Call createOrAddTags function to update tags for the user's religion
+            await createOrAddTags(owner.religion, tags);
+
             const response = {
                 message: 'Question created successfully',
-                question: newQuestion 
+                question: newQuestion,
             };
-            res.status(201).json(response);
+
+            return res.status(201).json(response);
         }
     } catch (err) {
-        // console.log(err);
-        res.status(500).json("Couldn't create Question!! Please try again!");
+        console.error(err);
+        return res.status(500).json("Couldn't create Question!! Please try again!");
+    }
+}
+
+async function getTags(req, res) {
+    const { query } = req.query;
+    const user = req.user;
+
+    try {
+        const tagsDocument = await Tags.findOne({religion: user.religion });
+        
+        if (!tagsDocument) {
+            return res.status(404).json({ message: 'No tags found for this religion' });
+        }
+        const tags = tagsDocument.tags ;
+        console.log(tagsDocument.tags);
+        const matchedTags = tags.filter(tag =>
+            tag.toLowerCase().includes(query.toLowerCase())
+        );
+
+        return res.status(200).json(matchedTags);
+    } catch (err) {
+        return res.status(500).json({ message: `Error fetching tags: ${err.message}` });
+    }
+}
+
+async function getAllTags(req, res) {
+    const user = req.user;
+
+    try {
+        const tagsDocument = await Tags.findOne({ religion: user.religion });
+
+        if (!tagsDocument) {
+            return res.status(404).json({ message: 'No tags found for this religion' });
+        }
+
+        return res.status(200).json(tagsDocument.tags);
+    } catch (err) {
+        return res.status(500).json({ message: `Error fetching tags: ${err.message}` });
     }
 }
 
@@ -99,7 +172,7 @@ async function deleteQuestion(req, res) {
         const owner = await User.findOne({userId: question.creatorId});
         // console.log(question);
         // console.log(owner);
-        if (question.creatorId?.toString() !== user?.userId?.toString()) {
+        if (user.role !== 'admin') {
             res.status(400).json("You are not allowed to Delete this post!");
             return;
         }
@@ -203,8 +276,9 @@ async function vote(req, res) {
 }
 
 async function getAllQuestion(req, res) {
+    const user = req.user;
     try {
-        const questions = await Question.find().sort({ createdAt: -1 });
+        const questions = await Question.find({religion: user.religion}).sort({ createdAt: -1 });
         const response = [];
         
         for (const question of questions) {
@@ -256,8 +330,6 @@ async function getUserQuestion(req, res) {
         const questions = await Question.find({creatorId: user.userId}).sort({ createdAt: -1 });
         const response = [];
         for (const question of questions) {
-            const replyCount = await Reply.countDocuments({replyToPost: question.questionId});
-            question.replyCount = replyCount;
             const userDetails = await User.findOne({userId: question?.creatorId});
             const reqInfo = new Object({
                 name: userDetails?.name,
@@ -350,6 +422,63 @@ async function voteToReply(req, res) {
             res.status(500).json(err);
         }
     }
+
+    async function searchContent(req, res) {
+        const { query } = req.query;
+        const user = req.user;
+    
+        // Ensure `query` is a string and sanitize it
+        const sanitizedQuery = typeof query === 'string' ? query : '';
+    
+        try {
+            // Query for questions
+            const questions = await Question.find({
+                religion: user.religion,
+                $or: [
+                    { questionTitle: { $regex: sanitizedQuery, $options: 'i' } },
+                    { description: { $regex: sanitizedQuery, $options: 'i' } }
+                ]
+            }).sort({ createdAt: -1 });
+    
+            // Query for articles
+            const articles = await Article.find({
+                religion: user.religion,
+                $or: [
+                    { articleTitle: { $regex: sanitizedQuery, $options: 'i' } },
+                    { description: { $regex: sanitizedQuery, $options: 'i' } }
+                ]
+            }).sort({ createdAt: -1 });
+    
+            const response = {
+                questions: [],
+                articles: []
+            };
+    
+            // Populate questions
+            for (const question of questions) {
+                const userDetails = await User.findOne({ userId: question.creatorId });
+                const reqInfo = {
+                    name: userDetails.name,
+                };
+                response.questions.push({ doubtDetails: question, ownerInfo: reqInfo });
+            }
+    
+            // Populate articles
+            for (const article of articles) {
+                const userDetails = await User.findOne({ userId: article.creatorId });
+                const reqInfo = {
+                    name: userDetails.name,
+                };
+                response.articles.push({ articleDetails: article, ownerInfo: reqInfo });
+            }
+    
+            res.status(200).json(response);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json("Error occurred while searching for questions! Please try again.");
+        }
+    }
+    
     
     async function sortReplies(req, res) {
         const { questionId } = req.params;
@@ -378,6 +507,122 @@ async function voteToReply(req, res) {
             res.status(500).json(err);
         }
     }
+
+    //Audio Funtion
+    const uploadAudio = async (req, res) => {
+        const { audioTitle, tags} = req.body;
+        const file = req.file;
+        const user = req.user;
+
+        const allowedMimeTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/mp4', 'audio/m4a'];
+        try {
+          
+          console.log(file, audioTitle, tags);
+          if (!file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+            return res.status(422).json({ message: 'Invalid file type. Please upload an audio file.' });
+        }
+          const result = await cloudinary.uploader.upload(file.path, {
+            resource_type: 'video', // Cloudinary treats audio files as videos
+            folder: 'faithHub_audio',
+        });
+          const audioDuration = `${Math.floor(result.duration / 60)}:${Math.floor(result.duration % 60)}`;
+
+      
+          const newAudio = new Audio({
+            audioId : uuidv4(),
+            audioTitle,
+            tags,
+            audio: result.secure_url,
+            creatorId: user.userId,
+            createdAt: Date.now(),
+            duration: audioDuration,
+            religion: user.religion,
+            url: result.secure_url,
+          });
+      
+          await newAudio.save();
+          res.status(201).json({ message: 'Audio uploaded successfully', audio: newAudio });
+        } catch (error) {
+          console.error('Error uploading audio:', error);
+          res.status(500).json({ message: 'Error uploading audio' });
+        }
+      };
+
+      const getAudio = async (req, res) => {
+        const user = req.user;
+        try {
+          const audioLists = await Audio.find({religion: user.religion}).sort({ createdAt: -1 });
+          const response = [];
+          for (const audioList of audioLists) {
+           
+            const userDetails = await User.findOne({userId: audioList?.creatorId});
+            const reqInfo = new Object({
+                name: userDetails?.name,
+                // photo: userDetails?.photo,
+                // reputation: userDetails?.reputation
+            });
+            response.push({ audioDetail: audioList, ownerInfo: reqInfo });
+        }
+          res.status(200).json(response);
+        } catch (error) {
+          console.error('Error fetching audio:', error);
+          res.status(500).json({ message: 'Error fetching audio' });
+        }
+      };
+
+      const deleteAudio = async (req, res) => {
+        const { audioId } = req.params; // Get audioId from request parameters
+        const user = req.user; // Get user information from the request context
+        try {
+            // Find the audio record in the database
+            if (user.role !== 'admin') {
+                res.status(400).json("You are not allowed to Delete this Audio!");
+                return;
+            }
+            const audio = await Audio.findOne({audioId: audioId});
+    
+            if (!audio) {
+                return res.status(404).json({ message: 'Audio not found' });
+            }
+    
+            // Delete the audio file from Cloudinary
+            const publicId = 'faithHub_audio/' + audio.url.split('/').pop().split('.')[0]; // Extract the public ID from the URL
+            console.log(publicId);
+            await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
+    
+            // Remove the audio record from the database
+            await Audio.deleteOne({ audioId });
+    
+            res.status(200).json({ message: 'Audio deleted successfully' });
+        } catch (error) {
+            console.error('Error deleting audio:', error);
+            res.status(500).json({ message: 'Error deleting audio' });
+        }
+    };
+
+      async function getTotalContent(req, res) {
+        try {
+            const questions = await Question.find();
+            const articles = await Article.find();
+            const audioLists = await Audio.find();
+            const user = await User.find();
+
+            const totalQuestion = questions.length;
+            const totalArticles = articles.length;
+            const totalAudio = audioLists.length;
+            const totalUser = user.length;
+
+            
+            res.status(200).json({totalQuestion, totalArticles, totalAudio, totalUser});
+        } catch (err) {
+            // console.log(err);
+            res.status(500).json("Error occurred while processing! Please try again!",err);
+        }
+    }
     
     module.exports = {
         createQuestion,
@@ -390,5 +635,13 @@ async function voteToReply(req, res) {
         voteToReply,
         sortReplies,
         getQuestionbyTags,
-        getUserQuestion
+        getUserQuestion,
+        createOrAddTags,
+        getTags,
+        getAllTags,
+        searchContent,
+        uploadAudio,
+        getAudio,
+        getTotalContent,
+        deleteAudio
     };

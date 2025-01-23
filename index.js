@@ -2,10 +2,12 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
-const connectDB = require('./bin/helpers/databases/connection');
+const {connect, connectCloudinary} = require('./bin/helpers/databases/connection');
 const authRoutes = require('./bin/app/routes/user');
 const questionRoutes = require('./bin/app/routes/question');
 const articleRoutes = require('./bin/app/routes/article');
+const dotenv = require('dotenv');
+dotenv.config();
 
 
 const app = express();
@@ -73,8 +75,8 @@ app.use('/api/question', questionRoutes);
 app.use('/api/article', articleRoutes);
 
 // Database connection
-connectDB();
-
+connect();
+connectCloudinary();
 
 // Start the server
 server.listen(PORT, () => {

@@ -8,17 +8,17 @@
     ],
     "routes": [
       {
-        "src": "/api/auth/(login|signup|myProfile)",
+        "src": "/api/auth/(login|signup|myProfile|getUsers)",
         "methods": ["POST", "GET"],
         "dest": "/bin/app/routes/user.js"
       },
       {
-        "src": "/api/question/(create|update|delete|reply|vote|fetchAll|getQuestionbyTags|getUserQuestion|getDetail|sortReplies)/:questionId*",
+        "src": "/api/question/(create|update|delete|reply|vote|fetchAll|getTags|getAllTags|getTotalContent|deleteAudio|uploadAudio|getAudioContent|getQuestionbyTags|searchContent|getUserQuestion|getDetail|sortReplies)/:questionId*",
         "methods": ["POST", "PUT", "DELETE", "GET"],
         "dest": "/bin/app/routes/question.js"
       },
       {
-        "src": "/api/article/(createArticle|get/all|get/:articleId|reply/:articleId)",
+        "src": "/api/article/(createArticle|get/all|get/:articleId|getArticlebyTags|deleteArticle/:articleId|reply/:articleId|vote/:articleId)",
         "methods": ["POST", "GET"],
         "dest": "/bin/app/routes/article.js"
       },
